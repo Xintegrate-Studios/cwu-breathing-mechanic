@@ -4,6 +4,9 @@ extends Control
 var accuracy : float = 100.0
 var first_breath : bool = true
 var breathing_phase : String = "inhale"  # "inhale" or "exhale"
+var total_score : float = 0.0
+var hits_count : int = 0
+var cumulative_accuracy : float = 100.0
 
 var input_pressed : bool = false:
 	set(value):
@@ -28,13 +31,32 @@ func _process(_delta: float) -> void:
 	$infolbls/breathing_phase.text = "phase: " + breathing_phase
 	
 	
-	$infolbls/accuracy.text = "ACCURACY: " + str(accuracy)
+	$infolbls/accuracy.text = "ACCURACY: " + str(accuracy) + "  AVG: " + str(cumulative_accuracy)
 	if accuracy <= 60.0 and accuracy > 30:
 		$infolbls/accuracy.modulate = Color(1.0, 1.0, 0.49, 1.0)
 	elif accuracy <= 30.0:
 		$infolbls/accuracy.modulate = Color(1.0, 0.0, 0.0, 1.0)
 	else:
 		$infolbls/accuracy.modulate = Color(1.0, 1.0, 1.0, 1.0)
+
+
+func _calculate_accuracy() -> float:
+	# Calculate accuracy as a percentage (0..100) based on how close
+	# the player's input was to the center of the accuracy window.
+	# If it's the very first breath, return perfect score.
+	var t = $Timers/breath_accuracy_cap
+	if first_breath:
+		return 100.0
+	if t.wait_time <= 0.0:
+		return 0.0
+	var ideal = t.wait_time / 2.0
+	var tl = t.time_left
+	var dist = abs(tl - ideal)
+	var normalized = 0.0
+	if ideal > 0.0:
+		normalized = clamp(1.0 - (dist / ideal), 0.0, 1.0)
+	var percent = normalized * 100.0
+	return round(percent * 100.0) / 100.0
 
 
 
@@ -53,7 +75,13 @@ func _input(_event: InputEvent) -> void:
 		# For the very first inhale, allow success even if accuracy timer
 		# wasn't started. Clear `first_breath` only when inhale succeeds.
 		if $Timers/breath_accuracy_cap.time_left > 0.0 or first_breath:
-			print("hoorah - inhale success")
+			# Compute accuracy before stopping the timer so time_left is valid
+			accuracy = _calculate_accuracy()
+			# update cumulative
+			total_score += accuracy
+			hits_count += 1
+			cumulative_accuracy = round((total_score / hits_count) * 100.0) / 100.0
+			print("hoorah - inhale success - accuracy: " + str(accuracy) + "  AVG: " + str(cumulative_accuracy))
 			$Timers/breath_accuracy_cap.stop()
 			breathing_phase = "exhale"
 			first_breath = false
@@ -64,7 +92,14 @@ func _input(_event: InputEvent) -> void:
 	# Validate exhale (button press - player starts holding again)
 	elif Input.is_action_just_pressed("input") and breathing_phase == "exhale":
 		if $Timers/breath_accuracy_cap.time_left > 0.0:
-			print("hoorah - exhale success")
+			# Compute accuracy based on when the player pressed during the
+			# accuracy window.
+			accuracy = _calculate_accuracy()
+			# update cumulative
+			total_score += accuracy
+			hits_count += 1
+			cumulative_accuracy = round((total_score / hits_count) * 100.0) / 100.0
+			print("hoorah - exhale success - accuracy: " + str(accuracy) + "  AVG: " + str(cumulative_accuracy))
 			$Timers/breath_accuracy_cap.stop()
 			breathing_phase = "inhale"
 			$Timers/breath_interval.start()
