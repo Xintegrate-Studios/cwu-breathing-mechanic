@@ -13,7 +13,6 @@ config_version=5
 config/name="cwu-breathing-mechanic"
 run/main_scene="uid://cn7xkggpbeqxv"
 config/features=PackedStringArray("4.6", "Forward Plus")
-config/icon="res://icon.svg"
 
 [editor_plugins]
 
