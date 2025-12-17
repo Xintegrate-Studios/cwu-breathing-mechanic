@@ -3,6 +3,7 @@ extends Control
 
 var accuracy : float = 100.0
 var first_breath : bool = true
+var breathing_phase : String = "inhale"  # "inhale" or "exhale"
 
 var input_pressed : bool = false:
 	set(value):
@@ -24,6 +25,7 @@ func _process(_delta: float) -> void:
 	$infolbls/breath_interval_left.text = "breath interval time left: " + "%.2f" % $Timers/breath_interval.time_left
 	
 	$infolbls/first_breath.text = "first breath? " + str(first_breath)
+	$infolbls/breathing_phase.text = "phase: " + breathing_phase
 	
 	
 	$infolbls/accuracy.text = "ACCURACY: " + str(accuracy)
@@ -38,19 +40,41 @@ func _process(_delta: float) -> void:
 
 func _input(_event: InputEvent) -> void:
 	if Input.is_action_just_pressed("input") and first_breath:
-		first_breath = false
+		# Start the first inhale, but don't clear `first_breath` yet.
+		# We want the release (end of inhale) to succeed even without
+		# the accuracy timer having been started.
+		breathing_phase = "inhale"
+		# Start the breathing cycle immediately when the player begins
+		# the first inhale so the timers behave consistently.
 		$Timers/breath_interval.start()
 	
-	
-	if Input.is_action_just_released("input"):
-		if $Timers/breath_accuracy_cap.time_left > 0.0:
-			print("hoorah")
+	# Validate inhale (button release - player stops holding)
+	elif Input.is_action_just_released("input") and breathing_phase == "inhale":
+		# For the very first inhale, allow success even if accuracy timer
+		# wasn't started. Clear `first_breath` only when inhale succeeds.
+		if $Timers/breath_accuracy_cap.time_left > 0.0 or first_breath:
+			print("hoorah - inhale success")
 			$Timers/breath_accuracy_cap.stop()
+			breathing_phase = "exhale"
+			first_breath = false
 			$Timers/breath_interval.start()
 		else:
-			print("goober")
+			print("goober - inhale failed")
+	
+	# Validate exhale (button press - player starts holding again)
+	elif Input.is_action_just_pressed("input") and breathing_phase == "exhale":
+		if $Timers/breath_accuracy_cap.time_left > 0.0:
+			print("hoorah - exhale success")
+			$Timers/breath_accuracy_cap.stop()
+			breathing_phase = "inhale"
+			$Timers/breath_interval.start()
+		else:
+			print("goober - exhale failed")
 
 
 
 func _on_breath_interval_timeout() -> void:
-	$Timers/breath_accuracy_cap.start()
+	if breathing_phase == "inhale":
+		$Timers/breath_accuracy_cap.start()
+	elif breathing_phase == "exhale":
+		$Timers/breath_accuracy_cap.start()

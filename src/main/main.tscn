@@ -107,6 +107,14 @@ text = "breath accuracy gap time left:
 "
 horizontal_alignment = 1
 
+[node name="breathing_phase" type="Label" parent="infolbls" unique_id=1737052860]
+layout_mode = 0
+offset_left = 205.0
+offset_top = 103.0
+offset_right = 271.0
+offset_bottom = 126.0
+text = "phase: #"
+
 [node name="bool_buttonbeingpressed" type="Label" parent="." unique_id=2105361256]
 layout_mode = 0
 offset_left = 308.0
