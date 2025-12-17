@@ -1,0 +1,129 @@
+[gd_scene load_steps=2 format=3 uid="uid://cn7xkggpbeqxv"]
+
+[ext_resource type="Script" uid="uid://dd4y86fqfj645" path="res://main.gd" id="1_ig7tw"]
+
+[node name="World" type="Control" unique_id=1817475007]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_ig7tw")
+
+[node name="infolbls" type="Control" parent="." unique_id=483126757]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="buttonbeingpressed" type="Label" parent="infolbls" unique_id=1055809592]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -456.0
+offset_top = -194.0
+offset_right = -262.0
+offset_bottom = -163.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "button being pressed:"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="first_breath" type="Label" parent="infolbls" unique_id=951584193]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -446.0
+offset_top = -161.0
+offset_right = -252.0
+offset_bottom = -130.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "first breath? #"
+vertical_alignment = 1
+
+[node name="input" type="Label" parent="infolbls" unique_id=1269704896]
+layout_mode = 0
+offset_left = 6.0
+offset_top = 620.0
+offset_right = 131.0
+offset_bottom = 643.0
+text = "(BACKSLASH \"\\\")"
+
+[node name="breath_interval" type="Label" parent="infolbls" unique_id=670263915]
+layout_mode = 0
+offset_left = 852.0
+offset_top = 5.0
+offset_right = 987.0
+offset_bottom = 38.0
+text = "breath interval: #"
+
+[node name="breath_interval_left" type="Label" parent="infolbls" unique_id=1486647700]
+modulate = Color(1, 0.7019608, 1, 1)
+layout_mode = 0
+offset_left = 656.0
+offset_top = 563.0
+offset_right = 963.0
+offset_bottom = 612.0
+text = "breath interval time left: 
+"
+horizontal_alignment = 1
+
+[node name="accuracy" type="Label" parent="infolbls" unique_id=855019553]
+layout_mode = 0
+offset_left = 458.0
+offset_top = 441.0
+offset_right = 764.0
+offset_bottom = 533.0
+theme_override_font_sizes/font_size = 22
+text = "ACCURACY: 100"
+
+[node name="breath_accuracy_gap" type="Label" parent="infolbls" unique_id=1199972330]
+layout_mode = 0
+offset_left = 852.0
+offset_top = 34.0
+offset_right = 1009.0
+offset_bottom = 57.0
+text = "breath accuracy gap: #"
+
+[node name="breath_accuracy_gap_left" type="Label" parent="infolbls" unique_id=876106208]
+modulate = Color(1, 0.7019608, 1, 1)
+layout_mode = 0
+offset_left = 622.0
+offset_top = 588.0
+offset_right = 955.0
+offset_bottom = 637.0
+text = "breath accuracy gap time left: 
+"
+horizontal_alignment = 1
+
+[node name="bool_buttonbeingpressed" type="Label" parent="." unique_id=2105361256]
+layout_mode = 0
+offset_left = 308.0
+offset_top = 131.0
+offset_right = 348.0
+offset_bottom = 159.0
+theme_override_font_sizes/font_size = 20
+text = "YES"
+
+[node name="Timers" type="Node" parent="." unique_id=613597602]
+
+[node name="breath_interval" type="Timer" parent="Timers" unique_id=1393922805]
+wait_time = 2.5
+one_shot = true
+
+[node name="breath_accuracy_cap" type="Timer" parent="Timers" unique_id=290176976]
+wait_time = 0.7
+one_shot = true
+
+[connection signal="timeout" from="Timers/breath_interval" to="." method="_on_breath_interval_timeout"]
