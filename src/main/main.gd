@@ -59,7 +59,6 @@ func _calculate_accuracy() -> float:
 	return round(percent * 100.0) / 100.0
 
 
-
 func _input(_event: InputEvent) -> void:
 	if Input.is_action_just_pressed("input") and first_breath:
 		# Start the first inhale, but don't clear `first_breath` yet.
