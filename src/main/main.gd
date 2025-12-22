@@ -6,6 +6,22 @@ extends Control
 @export var late_zero_scale := 2.0       # forgiveness multiplier
 @export var fail_release_threshold := 1.0 # seconds before window end that counts as fail
 
+var _input_pressed_internal: bool = false
+var input_pressed: bool:
+	set(value):
+		if _input_pressed_internal == value:
+			return
+		_input_pressed_internal = value
+
+		if value:
+			$bool_buttonbeingpressed.modulate = Color(0.0, 1.0, 0.0, 1.0)
+			$bool_buttonbeingpressed.text = "YES"
+		else:
+			$bool_buttonbeingpressed.modulate = Color(1.0, 0.0, 0.0, 1.0)
+			$bool_buttonbeingpressed.text = "NO"
+	get:
+		return _input_pressed_internal
+
 # ======================
 # STATE
 # ======================
@@ -35,6 +51,8 @@ func _ready() -> void:
 # PROCESS HUD
 # ======================
 func _process(_delta: float) -> void:
+	input_pressed = Input.is_action_pressed("input")
+	
 	$infolbls/breath_interval.text = "breath interval: " + str($Timers/breath_interval.wait_time)
 	$infolbls/breath_interval_left.text = "breath interval time left: %.2f" % $Timers/breath_interval.time_left
 	$infolbls/breath_accuracy_gap.text = "breath accuracy gap: " + str($Timers/breath_accuracy_cap.wait_time)
