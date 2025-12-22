@@ -99,8 +99,6 @@ func _on_breath_accuracy_cap_timeout() -> void:
 		accuracy_window_active = false  # stop window
 		_fail_phase()
 
-
-
 func _start_accuracy_window() -> void:
 	accuracy_window_active = true
 	window_start_ms = Time.get_ticks_msec()
