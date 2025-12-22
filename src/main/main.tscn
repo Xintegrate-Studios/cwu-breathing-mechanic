@@ -10,6 +10,8 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_ig7tw")
+late_zero_scale = null
+fail_release_threshold = null
 
 [node name="infolbls" type="Control" parent="." unique_id=483126757]
 layout_mode = 1

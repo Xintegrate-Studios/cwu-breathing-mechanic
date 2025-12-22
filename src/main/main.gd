@@ -73,13 +73,18 @@ func _finish_phase() -> void:
 	breathing_phase = "exhale" if breathing_phase == "inhale" else "inhale"
 	$Timers/breath_interval.start()
 
-func _fail_phase() -> void:
+func _fail_phase(flip_phase: bool = true) -> void:
 	print("FAIL - " + breathing_phase)
 	fails += 1
 	accuracy_window_active = false
 	$Timers/breath_accuracy_cap.stop()
-	breathing_phase = "exhale" if breathing_phase == "inhale" else "inhale"
+	
+	if flip_phase:
+		# flip only if it's a normal fail (not window timeout fail)
+		breathing_phase = "exhale" if breathing_phase == "inhale" else "inhale"
+	
 	$Timers/breath_interval.start()
+
 
 # ======================
 # TIMERS
@@ -94,10 +99,10 @@ func _on_breath_interval_timeout() -> void:
 	_start_accuracy_window()
 
 func _on_breath_accuracy_cap_timeout() -> void:
-	# Trigger fail as soon as window ends
 	if accuracy_window_active:
-		accuracy_window_active = false  # stop window
-		_fail_phase()
+		# fail but **don’t flip**, let player try again in same phase
+		_fail_phase(false)
+
 
 func _start_accuracy_window() -> void:
 	accuracy_window_active = true
