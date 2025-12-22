@@ -3,103 +3,83 @@ extends Control
 # ======================
 # CONFIG
 # ======================
-var late_zero_scale : float = 2.0           # forgiveness multiplier
-var skip_accuracy_threshold : float = 0.7   # seconds to detect near-next
+@export var late_zero_scale := 2.0       # forgiveness multiplier
+@export var fail_release_threshold := 1.0 # seconds before window end that counts as fail
 
 # ======================
 # STATE
 # ======================
-var accuracy : float = 100.0
-var first_breath : bool = true
-var breathing_phase : String = "exhale"  # "inhale" or "exhale"
-var total_score : float = 0.0
-var hits_count : int = 0
-var cumulative_accuracy : float = 100.0
+var breathing_phase := "exhale"          # always start on exhale
 
-var input_pressed : bool = false
+var accuracy_window_active := false
+var window_start_ms := 0
+var window_duration := 0.0
 
-# accuracy window
-var accuracy_window_active : bool = false
-var accuracy_window_start_ms : int = 0
-var accuracy_window_duration : float = 0.0
-var skip_next_accuracy : bool = false
+var accuracy := 0.0
+var total_score := 0.0
+var hits_count := 0
+var cumulative_accuracy := 0.0
+var fails := 0
+
+var skip_next_accuracy := false
+var skip_accuracy_threshold := 0.7  # near-next behavior
 
 # ======================
 # READY
 # ======================
 func _ready() -> void:
-	$Timers/breath_interval.start()  # start breathing automatically
+	# start breathing interval
+	$Timers/breath_interval.start()
 
 # ======================
-# PROCESS (HUD)
+# PROCESS HUD
 # ======================
 func _process(_delta: float) -> void:
-	input_pressed = Input.is_action_pressed("input")
-
 	$infolbls/breath_interval.text = "breath interval: " + str($Timers/breath_interval.wait_time)
+	$infolbls/breath_interval_left.text = "breath interval time left: %.2f" % $Timers/breath_interval.time_left
 	$infolbls/breath_accuracy_gap.text = "breath accuracy gap: " + str($Timers/breath_accuracy_cap.wait_time)
 	$infolbls/breath_accuracy_gap_left.text = "breath accuracy gap time left: %.2f" % $Timers/breath_accuracy_cap.time_left
-	$infolbls/breath_interval_left.text = "breath interval time left: %.2f" % $Timers/breath_interval.time_left
-	$infolbls/first_breath.text = "first breath? " + str(first_breath)
 	$infolbls/breathing_phase.text = "phase: " + breathing_phase
 	$infolbls/accuracy.text = "ACCURACY: " + str(accuracy) + "  AVG: " + str(cumulative_accuracy)
-
-	# Optional: change HUD color based on accuracy
-	if accuracy <= 60.0 and accuracy > 30:
-		$infolbls/accuracy.modulate = Color(1.0, 1.0, 0.49, 1.0)
-	elif accuracy <= 30.0:
-		$infolbls/accuracy.modulate = Color(1.0, 0.0, 0.0, 1.0)
-	else:
-		$infolbls/accuracy.modulate = Color(1.0, 1.0, 1.0, 1.0)
+	$infolbls/fails.text = "FAILS: " + str(fails)
 
 # ======================
-# INPUT HANDLER
+# INPUT
 # ======================
 func _input(_event: InputEvent) -> void:
-	if _event.is_action_pressed("input"):
-		input_pressed = true
-	elif _event.is_action_released("input"):
-		input_pressed = false
-
-	# Determine action type
-	var is_inhale_action = (breathing_phase == "inhale" and not input_pressed)   # release = inhale
-	var is_exhale_action = (breathing_phase == "exhale" and input_pressed)       # press = exhale
-
-	if is_inhale_action or is_exhale_action:
-		_try_score_nearnext()
+	# EXHALE: press to hold
+	if Input.is_action_just_pressed("input") and breathing_phase == "exhale":
+		_try_score()
+	# INHALE: release to complete
+	elif Input.is_action_just_released("input") and breathing_phase == "inhale":
+		_try_score()
 
 # ======================
-# SCORING / LOGIC
+# CORE LOGIC
 # ======================
-func _try_score_nearnext() -> void:
-	var interval_t = $Timers/breath_interval
-	var now_ms = Time.get_ticks_msec()
-
-	# Near-next detection: acting near end of interval
-	if interval_t.time_left > 0.0 and interval_t.time_left <= skip_accuracy_threshold:
-		var future_start_ms = now_ms + int(interval_t.time_left * 1000)
-		var acc = _compute_accuracy_for_window(future_start_ms, $Timers/breath_accuracy_cap.wait_time)
-		skip_next_accuracy = true
-		_accept_action(acc)
-		accuracy_window_active = false
-		$Timers/breath_accuracy_cap.stop()
-		# Flip phase and restart interval
-		breathing_phase = "exhale" if breathing_phase == "inhale" else "inhale"
-		$Timers/breath_interval.start()
+func _try_score() -> void:
+	var acc := _calculate_accuracy()
+	if acc <= 0.0:
+		_fail_phase()
 		return
+	_accept_action(acc)
+	_finish_phase()
 
-	# Normal scoring
-	var acc = _calculate_accuracy()
-	if acc > 0.0 or first_breath:
-		_accept_action(acc)
-		accuracy_window_active = false
-		$Timers/breath_accuracy_cap.stop()
-		# Flip phase for next window
-		breathing_phase = "exhale" if breathing_phase == "inhale" else "inhale"
-		first_breath = false
-		$Timers/breath_interval.start()
-	else:
-		print("missed input")
+func _finish_phase() -> void:
+	accuracy_window_active = false
+	$Timers/breath_accuracy_cap.stop()
+	
+	# flip phase
+	breathing_phase = "exhale" if breathing_phase == "inhale" else "inhale"
+	$Timers/breath_interval.start()
+
+func _fail_phase() -> void:
+	print("FAIL - " + breathing_phase)
+	fails += 1
+	accuracy_window_active = false
+	$Timers/breath_accuracy_cap.stop()
+	breathing_phase = "exhale" if breathing_phase == "inhale" else "inhale"
+	$Timers/breath_interval.start()
 
 # ======================
 # TIMERS
@@ -111,67 +91,46 @@ func _on_breath_interval_timeout() -> void:
 		breathing_phase = "exhale" if breathing_phase == "inhale" else "inhale"
 		$Timers/breath_interval.start()
 		return
-
-	# Start accuracy window for current phase
-	accuracy_window_active = true
-	accuracy_window_start_ms = Time.get_ticks_msec()
-	accuracy_window_duration = $Timers/breath_accuracy_cap.wait_time
-	$Timers/breath_accuracy_cap.start()
+	_start_accuracy_window()
 
 func _on_breath_accuracy_cap_timeout() -> void:
-	accuracy_window_active = false
-	print("accuracy window expired")
+	# Trigger fail as soon as window ends
+	if accuracy_window_active:
+		accuracy_window_active = false  # stop window
+		_fail_phase()
+
+
+
+func _start_accuracy_window() -> void:
+	accuracy_window_active = true
+	window_start_ms = Time.get_ticks_msec()
+	window_duration = $Timers/breath_accuracy_cap.wait_time
+	$Timers/breath_accuracy_cap.start()
 
 # ======================
-# ACCURACY CALC
+# SCORING
 # ======================
 func _calculate_accuracy() -> float:
-	if first_breath:
-		return 100.0
-	if accuracy_window_duration <= 0.0:
+
+	if window_duration <= 0.0:
 		return 0.0
 
-	var now_ms = Time.get_ticks_msec()
-	var center_ms = accuracy_window_start_ms + int(accuracy_window_duration * 500.0)
-	var ideal_ms = int(accuracy_window_duration * 500.0)
-	var dist_ms = abs(now_ms - center_ms)
-	if dist_ms > int(float(ideal_ms) * late_zero_scale):
-		return 0.0
-	var normalized = clamp(1.0 - (float(dist_ms) / (float(ideal_ms) * late_zero_scale)), 0.0, 1.0)
-	return round(normalized * 100.0 * 100.0) / 100.0
+	var now_ms : int = Time.get_ticks_msec()
+	var duration_ms : int = int(window_duration * 1000)
+	var center_ms : int = window_start_ms + duration_ms / 2
+	var ideal_ms : int = duration_ms / 2
+	var dist : float = float(abs(now_ms - center_ms))
 
-func _compute_accuracy_for_window(start_ms: int, duration: float) -> float:
-	if first_breath:
-		return 100.0
-	if duration <= 0.0:
+	# If player pressed too early (before the switch window), count as fail
+	if dist > float(ideal_ms) * late_zero_scale:
 		return 0.0
-	var now_ms = Time.get_ticks_msec()
-	var center_ms = start_ms + int(duration * 500.0)
-	var ideal_ms = int(duration * 500.0)
-	var dist_ms = abs(now_ms - center_ms)
-	if dist_ms > int(float(ideal_ms) * late_zero_scale):
-		return 0.0
-	var normalized = clamp(1.0 - (float(dist_ms) / (float(ideal_ms) * late_zero_scale)), 0.0, 1.0)
-	return round(normalized * 100.0 * 100.0) / 100.0
 
-# ======================
-# ACCEPT ACTION
-# ======================
+	var norm : float = 1.0 - (dist / (float(ideal_ms) * late_zero_scale))
+	return clamp(round(norm * 100.0 * 100.0) / 100.0, 0.0, 100.0)
+
 func _accept_action(acc: float) -> void:
 	accuracy = acc
 	total_score += acc
 	hits_count += 1
 	cumulative_accuracy = round((total_score / hits_count) * 100.0) / 100.0
 	print("✔", breathing_phase, "accuracy:", accuracy, "AVG:", cumulative_accuracy)
-
-# ======================
-# MANUAL INPUT VISUAL
-# ======================
-func set_input_pressed(value: bool) -> void:
-	input_pressed = value
-	if value:
-		$bool_buttonbeingpressed.modulate = Color(0,1,0,1)
-		$bool_buttonbeingpressed.text = "YES"
-	else:
-		$bool_buttonbeingpressed.modulate = Color(1,0,0,1)
-		$bool_buttonbeingpressed.text = "NO"

@@ -115,6 +115,14 @@ offset_right = 271.0
 offset_bottom = 126.0
 text = "phase: #"
 
+[node name="fails" type="Label" parent="infolbls" unique_id=1969554199]
+layout_mode = 0
+offset_left = 622.0
+offset_top = 176.0
+offset_right = 688.0
+offset_bottom = 199.0
+text = "fails"
+
 [node name="bool_buttonbeingpressed" type="Label" parent="." unique_id=2105361256]
 layout_mode = 0
 offset_left = 308.0
@@ -135,3 +143,4 @@ wait_time = 0.7
 one_shot = true
 
 [connection signal="timeout" from="Timers/breath_interval" to="." method="_on_breath_interval_timeout"]
+[connection signal="timeout" from="Timers/breath_accuracy_cap" to="." method="_on_breath_accuracy_cap_timeout"]
