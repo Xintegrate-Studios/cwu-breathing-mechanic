@@ -13,14 +13,19 @@ var input_pressed: bool:
 			return
 		_input_pressed_internal = value
 
-		if value:
-			$bool_buttonbeingpressed.modulate = Color(0.0, 1.0, 0.0, 1.0)
-			$bool_buttonbeingpressed.text = "YES"
-		else:
-			$bool_buttonbeingpressed.modulate = Color(1.0, 0.0, 0.0, 1.0)
-			$bool_buttonbeingpressed.text = "NO"
+		# update visuals
+		_update_input_ui()
 	get:
 		return _input_pressed_internal
+
+
+func _update_input_ui() -> void:
+	if _input_pressed_internal:
+		$bool_buttonbeingpressed.modulate = Color(0.0, 1.0, 0.0, 1.0)
+		$bool_buttonbeingpressed.text = "YES"
+	else:
+		$bool_buttonbeingpressed.modulate = Color(1.0, 0.0, 0.0, 1.0)
+		$bool_buttonbeingpressed.text = "NO"
 
 # ======================
 # STATE
@@ -46,6 +51,9 @@ var skip_accuracy_threshold := 0.7  # near-next behavior
 func _ready() -> void:
 	# start breathing interval
 	$Timers/breath_interval.start()
+
+	# ensure input UI matches current internal state on startup
+	_update_input_ui()
 
 # ======================
 # PROCESS HUD
