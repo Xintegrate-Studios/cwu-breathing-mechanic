@@ -146,7 +146,9 @@ func _calculate_accuracy() -> float:
 
 	var now_ms : int = Time.get_ticks_msec()
 	var duration_ms : int = int(window_duration * 1000)
+	@warning_ignore("integer_division")
 	var center_ms : int = window_start_ms + duration_ms / 2
+	@warning_ignore("integer_division")
 	var ideal_ms : int = duration_ms / 2
 	var dist : float = float(abs(now_ms - center_ms))
 
