@@ -32,7 +32,7 @@ offset_right = -262.0
 offset_bottom = -163.0
 grow_horizontal = 2
 grow_vertical = 2
-text = "button being pressed:"
+text = "space being pressed:"
 horizontal_alignment = 1
 vertical_alignment = 1
 
