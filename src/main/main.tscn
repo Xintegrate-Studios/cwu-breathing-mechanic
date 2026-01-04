@@ -36,14 +36,6 @@ text = "button being pressed:"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="input" type="Label" parent="infolbls" unique_id=1269704896]
-layout_mode = 0
-offset_left = 6.0
-offset_top = 620.0
-offset_right = 131.0
-offset_bottom = 643.0
-text = "(BACKSLASH \"\\\")"
-
 [node name="breath_interval" type="Label" parent="infolbls" unique_id=670263915]
 layout_mode = 0
 offset_left = 852.0
