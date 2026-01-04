@@ -22,6 +22,11 @@ As mentioned before, you will need to time your breaths correctly. There is a ce
 
 <img width="254" height="139" alt="image" src="https://github.com/user-attachments/assets/2c219ced-e49e-4c9d-a9bf-cfffff1791c8" />
 
+You can see the timers in action by looking at these pink labels:
+
+<img width="406" height="107" alt="image" src="https://github.com/user-attachments/assets/1d9e58b2-baf7-4d61-bd5d-d43c933a75eb" />
+
+
 
 Depending on how late/early your input is, the `ACCURACY:` and `AVG:` labels will update accordingly.
 
@@ -36,11 +41,9 @@ If you switch phases before the accuracy gap timer starts (while the breath inte
 
 https://github.com/user-attachments/assets/dce623e3-b243-48f6-bfca-f2b3d6b60789
 
+### Player doesn't switch phases
+If the accuracy gap timer runs out and no switch of phases (press/release) is detected, the system will count it as a failure and restart the current phase, as seen in the clip below:
+
+https://github.com/user-attachments/assets/2b978cbb-175a-4ce8-b979-e7684cd1fafa
 
 
-
-
-
-
-
-<img width="260" height="31" alt="image" src="https://github.com/user-attachments/assets/3dee76a9-c500-4049-adba-e62a0a3dd8d4" />
